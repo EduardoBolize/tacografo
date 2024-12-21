@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes Vencidos</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <h1>Clientes Vencidos</h1>
+  <label>
+    <input type="checkbox" id="filter-close-to-expiry" /> Mostrar apenas clientes próximos de vencer
+    <button onclick="window.location.href='/clientes-flag-page'">Ver Clientes com Flag</button>
+  </label>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Razão Social</th>
+        <th>Data de Cadastro</th>
+        <th>Data de Modificação</th>
+        <th>Data de Vencimento</th>
+        <th>Dias para Vencer</th>
+        <th>Status</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="clients-table-body">
+    </tbody>
+  </table>
+
+  <script>
+    const tableBody = document.getElementById('clients-table-body');
+    const filterCloseToExpiry = document.getElementById('filter-close-to-expiry');
+    let clients = [];
+
+    async function loadClients() {
+      try {
+        const response = await fetch('/clientes-vencidos');
+        clients = await response.json();
+
+        renderClients();
+      } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+      }
+    }
+
+    function renderClients() {
+      tableBody.innerHTML = '';
+
+      const filteredClients = clients
+        .filter(client => {
+          if (filterCloseToExpiry.checked) {
+            // Mostrar apenas clientes próximos de vencer (menos de 10 dias e não vencidos)
+            return client.dias_para_vencer >= 0 && client.dias_para_vencer < 10;
+          }
+          return true;
+        })
+        .sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento)); // Ordenar por vencimento
+
+      filteredClients.forEach(client => {
+        const row = document.createElement('tr');
+        row.className = client.status === 'Vencido' ? 'vencido' : 'proximo';
+        row.innerHTML = `
+          <td>${client.id_cliente}</td>
+          <td>${client.razao_cliente}</td>
+          <td>${client.data_cad_cliente || '-'}</td>
+          <td>${client.data_mod_cliente || '-'}</td>
+          <td>${client.vencimento}</td>
+          <td>${client.dias_para_vencer}</td>
+          <td>${client.status}</td>
+          <td>
+            <td>
+              <button onclick="addFlag(${client.id_cliente})">Adicionar Flag</button>
+              <button onclick="updateDataModCliente(${client.id_cliente})">Atualizar</button>
+            </td>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Função para adicionar a flag a um cliente
+    async function addFlag(id) {
+      try {
+        const response = await fetch(`/clientes-vencidos/${id}/adicionar-flag`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert(result.message);
+          location.reload();
+        } else {
+          alert('Erro ao adicionar flag ao cliente.');
+        }
+      } catch (error) {
+        console.error('Erro ao adicionar flag ao cliente:', error);
+      }
+    }
+
+    // Função para atualizar o data_mod_cliente de um cliente
+    async function updateDataModCliente(id) {
+      try {
+        const response = await fetch(`/clientes-vencidos/${id}/atualizar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ atualizar: true }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert(result.message);
+          location.reload();
+        } else {
+          alert('Erro ao atualizar cliente.');
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar cliente:', error);
+      }
+    }
+
+    // Função para verificar e atualizar o cache
+    async function checkForUpdates() {
+      try {
+        const response = await fetch('/verificar-atualizacoes');
+        if (!response.ok) {
+          throw new Error('Erro ao verificar atualizações.');
+        }
+        const result = await response.json();
+
+        if (result.updated) {
+          alert(result.message); // Exibir mensagem opcional para o usuário
+          loadClients(); // Recarregar a tabela com novos clientes
+        }
+      } catch (error) {
+        console.error('Erro ao verificar atualizações:', error);
+      }
+    }
+
+    // Configurar verificação periódica a cada 10 segundos
+    setInterval(checkForUpdates, 10000);
+
+
+    filterCloseToExpiry.addEventListener('change', renderClients);
+
+    loadClients();
+  </script>
+</body>
+
+</html>

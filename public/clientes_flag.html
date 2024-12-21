@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes com Flag</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <h1>Clientes com Flag</h1>
+  <label>
+    <button onclick="window.location.href='/'">Voltar para Página Principal</button>
+  </label>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Razão Social</th>
+        <th>Data de Cadastro</th>
+        <th>Data de Modificação</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="flagged-clients-table-body">
+    </tbody>
+  </table>
+
+  <script>
+    const tableBody = document.getElementById('flagged-clients-table-body');
+    // Função para carregar clientes com flag
+    async function loadFlaggedClients() {
+      try {
+        const response = await fetch('/clientes-flag');
+        if (!response.ok) {
+          throw new Error('Erro ao buscar clientes com flag.');
+        }
+        const clients = await response.json();
+
+        // Renderizar os clientes na tabela
+        renderFlaggedClients(clients);
+      } catch (error) {
+        console.error('Erro ao carregar clientes com flag:', error);
+      }
+    }
+
+    // Função para renderizar a tabela com os clientes com flag
+    function renderFlaggedClients(clients) {
+      tableBody.innerHTML = '';
+
+      if (clients.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5">Nenhum cliente com flag encontrado.</td></tr>';
+        return;
+      }
+
+      clients.forEach(client => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${client.id_cliente}</td>
+          <td>${client.razao_cliente}</td>
+          <td>${client.data_cad_cliente || '-'}</td>
+          <td>${client.data_mod_cliente || '-'}</td>
+          <td>
+            <button onclick="removeFlag(${client.id_cliente})">Remover Flag</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Função para remover flag de um cliente
+    async function removeFlag(id) {
+      try {
+        const response = await fetch(`/clientes-flag/${id}/remover`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert(result.message);
+          loadFlaggedClients(); // Recarregar os clientes com flag
+        } else {
+          alert('Erro ao remover flag do cliente.');
+        }
+      } catch (error) {
+        console.error('Erro ao remover flag do cliente:', error);
+      }
+    }
+
+    // Função para verificar e atualizar o cache
+    async function checkForUpdates() {
+      try {
+        const response = await fetch('/verificar-atualizacoes');
+        if (!response.ok) {
+          throw new Error('Erro ao verificar atualizações.');
+        }
+        const result = await response.json();
+
+        if (result.updated) {
+          alert(result.message); // Exibir mensagem opcional para o usuário
+          loadFlaggedClients(); // Recarregar a tabela com novos clientes
+        }
+      } catch (error) {
+        console.error('Erro ao verificar atualizações:', error);
+      }
+    }
+
+    // Configurar verificação periódica a cada 10 segundos
+    setInterval(checkForUpdates, 10000);
+
+
+
+    // Carregar os clientes com flag ao carregar a página
+    loadFlaggedClients();
+  </script>
+
+</body>
+
+</html>

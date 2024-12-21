@@ -1,0 +1,85 @@
+/* styles.css */
+
+/* Tema Dark */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+h1 {
+    text-align: center;
+    color: #ffffff;
+    margin: 20px 0;
+}
+
+button {
+    background-color: #1e88e5;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #1565c0;
+}
+
+table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #1e1e1e;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid #333;
+}
+
+th {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+tr:nth-child(even) {
+    background-color: #1c1c1c;
+}
+
+tr:nth-child(odd) {
+    background-color: #232323;
+}
+
+tr:hover {
+    background-color: #444444;
+}
+
+.vencido {
+    background-color: #ff5252;
+    color: #ffffff;
+}
+
+.proximo {
+    background-color: #ffa726;
+    color: #ffffff;
+}
+
+label {
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+    font-size: 16px;
+}
+
+input[type="checkbox"] {
+    margin-right: 5px;
+}
